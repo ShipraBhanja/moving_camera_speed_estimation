@@ -1,0 +1,2 @@
+ultralytics opencv-python numpy torch torchvision
+git+https://github.com/cvg/LightGlue.git
