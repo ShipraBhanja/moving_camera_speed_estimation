@@ -1,25 +1,48 @@
 import numpy as np
-from utils.motion import compensate_motion
+import time
+from utils.motion_estimation import compensate_motion
 
-prev_positions = {}
+track_history = {}
+time_history = {}
 
 def compute_speed(track_id, position, H, ppm):
-    if track_id in prev_positions:
-        prev_pos = prev_positions[track_id]
+    HISTORY_LENGTH = 3
+    MIN_SPEED_KMPH = 0.5
 
-        prev_comp = compensate_motion(prev_pos, H)
+    current_time = time.time()
 
-        dx = position[0] - prev_comp[0]
-        dy = position[1] - prev_comp[1]
+    if track_id not in track_history:
+        track_history[track_id] = []
+        time_history[track_id] = []
 
-        pixel_dist = np.sqrt(dx**2 + dy**2)
+    track_history[track_id].append(position)
+    time_history[track_id].append(current_time)
 
-        FPS = 30
+    if len(track_history[track_id]) > HISTORY_LENGTH:
+        track_history[track_id].pop(0)
+        time_history[track_id].pop(0)
 
-        # 🔥 use user input ppm
-        speed = (pixel_dist / ppm) * FPS
-    else:
-        speed = 0
+    if len(track_history[track_id]) < 2:
+        return 0.0
 
-    prev_positions[track_id] = position
-    return speed
+    positions = track_history[track_id]
+
+    start = compensate_motion(positions[0], H)
+    end = positions[-1]
+
+    dx = end[0] - start[0]
+    dy = end[1] - start[1]
+
+    pixel_dist = np.sqrt(dx**2 + dy**2)
+
+    dt = time_history[track_id][-1] - time_history[track_id][0]
+    if dt <= 0:
+        return 0.0
+
+    meter_dist = pixel_dist / ppm
+    speed_kmph = (meter_dist / dt) * 3.6
+
+    if speed_kmph < MIN_SPEED_KMPH:
+        return 0.0
+
+    return speed_kmph

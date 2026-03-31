@@ -7,8 +7,8 @@ from ultralytics import YOLO
 from lightglue import LightGlue, SuperPoint
 from lightglue.utils import rbd
 
-from dynamic_camera_test.utils.speed_estimation import compute_speed
-from dynamic_camera_test.utils.direction_estimation import get_direction
+from utils.speed_estimation import compute_speed
+from utils.direction_estimation import get_direction
 
 #  USER INPUT 
 while True:
